@@ -86,7 +86,7 @@ app.get('/restaurantList/:mealtype',(req,res) => {
     else{
         condition= {"type.mealtype":req.params.mealtype}
     }
-    db.collection('restaurent').find(condition).toArray((err,result) => {
+    db.collection('restaurant').find(condition).toArray((err,result) => {
         if(err) throw err;
         res.send(result)
     })
