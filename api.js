@@ -74,7 +74,7 @@ app.get('/restaurantdetails/:id',(req,res) => {
 })
 
 //RestaurentList
-app.get('/restaurantList/:mealtype',(req,res) => {
+app.get('/restaurantlist/:mealtype',(req,res) => {
     var condition = {};
     if(req.query.cuisine){
         condition={"type.mealtype":req.params.mealtype,"Cuisine.cuisine":req.query.cuisine}
