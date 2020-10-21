@@ -7,19 +7,11 @@ var MongoClient = mongo.MongoClient
 var mongourl = "mongodb+srv://root:mongodb619@cluster0.hctio.mongodb.net/edumato?retryWrites=true&w=majority";
 var cors = require('cors');
 var db;
-var fs = require('fs')
-var morgan = require('morgan')
-var path = require('path')
-
-app.use(morgan('tiny'))
-   
-  // log all requests to access.log
-  app.use(morgan('common', {
-    stream: fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' })
-  }))
 
 app.use(cors());
 
+app.use(bodParser.urlencoded({extended:true}));
+app.use(bodParser.json())
 
 app.get('/health',(req,res) => {
     res.send("Api is working")
@@ -55,15 +47,57 @@ app.get('/cuisine',(req,res) => {
 
 //restaurents
 app.get('/restaurants',(req,res) => {
-    var query = {};
-    if(req.query.city){
-        query={city:req.query.city}
-    }else{
-        query={}
+    var condition = {};
+    if(req.query.city && req.query.mealtype){
+        condition = {city:req.query.city,"type.mealtype":req.query.mealtype}
     }
-    db.collection('restaurant').find(query).toArray((err,result) => {
+    else if(req.query.city){
+        condition={city:req.query.city}
+    } else if(req.query.mealtype){
+        condition={"type.mealtype":req.query.mealtype}
+    }
+    else{
+        condition={}
+    }
+    db.collection('restaurant').find(condition).toArray((err,result) => {
         if(err) throw err;
         res.send(result)
+    })
+})
+
+//RestaurentDetai+
+app.get('/restaurantdetails/:id',(req,res) => {
+    var query = {_id:req.params.id}
+    db.collection('restaurant').find(query).toArray((err,result) => {
+        res.send(result)
+    })
+})
+
+//RestaurentList
+app.get('/restaurantList/:mealtype',(req,res) => {
+    var condition = {};
+    if(req.query.cuisine){
+        condition={"type.mealtype":req.params.mealtype,"Cuisine.cuisine":req.query.cuisine}
+    }else if(req.query.city){
+        condition={"type.mealtype":req.params.mealtype,city:req.query.city}
+    }else if(req.query.lcost && req.query.hcost){
+        condition={"type.mealtype":req.params.mealtype,cost:{$lt:Number(req.query.hcost),$gt:Number(req.query.lcost)}}
+    }
+    else{
+        condition= {"type.mealtype":req.params.mealtype}
+    }
+    db.collection('restaurent').find(condition).toArray((err,result) => {
+        if(err) throw err;
+        res.send(result)
+    })
+})
+
+//PlaceOrder
+app.post('/placeorder',(req,res) => {
+    console.log(req.body);
+    db.collection('orders').insert(req.body,(err,result) => {
+        if(err) throw err;
+        res.send('posted')
     })
 })
 
@@ -73,6 +107,29 @@ app.get('/orders',(req,res) => {
         if(err) throw err;
         res.send(result)
     })
+})
+
+///Not Require in project
+//Delete Orders
+app.delete('/deleteorders',(req,res) => {
+    db.collection('orders').remove({_id:req.body.id},(err,result) => {
+        if(err) throw err;
+        res.send('data deleted')
+    })
+})
+
+//Update orders
+app.put('/updateorders',(req,res) => {
+    db.collection('orders').update({_id:req.body._id},
+        {
+            $set:{
+                name:req.body.name,
+                address:req.body.address
+            }
+        },(err,result) => {
+            if(err) throw err;
+            res.send('data updated')
+        })
 })
 
 MongoClient.connect(mongourl,(err,connection) => {
