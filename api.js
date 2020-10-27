@@ -74,34 +74,23 @@ app.get('/restaurantdetails/:id',(req,res) => {
 })
 
 //RestaurentList
-app.get('/restaurantlist/:mealtype', (req,res) => {
-    var query = {"type.mealtype":req.params.mealtype};
-    var sort = {cost:-1}
-    if(req.query.city && req.query.sort){
-        query={"type.mealtype":req.params.mealtype,"city":req.query.city}
-        sort = {cost:Number(req.query.sort)}
-    }else if(req.query.cuisine  && req.query.sort){
-        query={"type.mealtype":req.params.mealtype,"Cuisine.cuisine":(req.query.cuisine)}
-        sort = {cost:Number(req.query.sort)}
-    }else if(req.query.lcost && req.query.hcost && req.query.sort){
-        query={"type.mealtype":req.params.mealtype,"cost":{$lt:parseInt(req.query.lcost),$gt:parseInt(req.query.hcost)} }
-        sort = {cost:Number(req.query.sort)}
+app.get('/restaurantList/:mealtype',(req,res) => {
+    var condition = {};
+    if(req.query.cuisine){
+        condition={"type.mealtype":req.params.mealtype,"Cuisine.cuisine":req.query.cuisine}
     }else if(req.query.city){
-        query={"type.mealtype":req.params.mealtype,"city":req.query.city}
-    }else if(req.query.cuisine){
-        query={"type.mealtype":req.params.mealtype,"Cuisine.cuisine":(req.query.cuisine)}
+        condition={"type.mealtype":req.params.mealtype,city:req.query.city}
     }else if(req.query.lcost && req.query.hcost){
-        query={"type.mealtype":req.params.mealtype,"cost":{$lt:parseInt(req.query.lcost),$gt:parseInt(req.query.hcost)} }
+        condition={"type.mealtype":req.params.mealtype,cost:{$lt:Number(req.query.hcost),$gt:Number(req.query.lcost)}}
     }
-    else if(req.query.sort){
-        query={"type.mealtype":req.params.mealtype}
-        sort={cost:Number(req.query.sort)}
+    else{
+        condition= {"type.mealtype":req.params.mealtype}
     }
-    db.collection('restaurant').find(query).sort(sort).toArray((err,result) =>{
+    db.collection('restaurant').find(condition).toArray((err,result) => {
         if(err) throw err;
         res.send(result)
     })
-});
+})
 //PlaceOrder
 app.post('/placeorder',(req,res) => {
     console.log(req.body);
