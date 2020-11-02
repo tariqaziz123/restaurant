@@ -76,7 +76,7 @@ app.get('/restaurantdetails/:id',(req,res) => {
 //RestaurentList
 app.get('/restaurantList/:mealtype',(req,res) => {
     var condition = {};
-    var sort = {city:1};
+    var sort = {cost:1};
     if(req.query.cuisine){
         condition={"type.mealtype":req.params.mealtype,"Cuisine.cuisine":req.query.cuisine}
     }else if(req.query.city){
